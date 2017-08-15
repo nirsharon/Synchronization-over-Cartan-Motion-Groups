@@ -49,28 +49,25 @@ for q=1:iterations
     SPEC_error = zeros(repeatedIters,1);
     CONT_error = zeros(repeatedIters,1);
     ASAP_error = zeros(repeatedIters,1);
+    disp(['iteration no.',num2str(q)]);
+    
     for r=1:repeatedIters
         % Spectral method based on SVD
-        estimations   = sync_SEk_by_SVD( triu(Affin_mat), confidence_weights, d );
-        SPEC_error(r) = error_calc_SE_k( estimations, GT_data );
+        estimations1   = sync_SEk_by_SVD( triu(Affin_mat), confidence_weights, d );
+        SPEC_error(r) = error_calc_SE_k( estimations1, GT_data );
+        
         % Contraction method
-        lambda = 200;                                         % TO DO: SMART Lambda CHOICE
-      %  if d==2
-            estimations2  =  SyncSEbyContraction(Affin_mat, confidence_weights, d, lambda, SO_sync_func);
-      %  else
-      %      estimations2  =  SyncSEbyContraction(Affin_mat, confidence_weights, d, lambda);
-      %  end
-            
-        CONT_error(r) = error_calc_SE_k( estimations2, GT_data );       
-        %     Matrix contraction (SVD)                                        
-        %     estimations3 = sync_SEk_by_PD_contraction( triu(Affin_mat), confidence_weights, d, lambda );
-        %     errors(q,3) = error_calc_SE_k( estimations3, SEk_GT_data );
-        %if d==2
-            estimations4 = sync_SEk_by_ASAP( triu(Affin_mat), confidence_weights, d, SO_sync_func);
-        %else
-        %    estimations4 = sync_SEk_by_ASAP( triu(Affin_mat), confidence_weights, d );
-        %end
-        ASAP_error(r)  = error_calc_SE_k( estimations4, GT_data );
+        lambda = 200;                                        
+        estimations2  =  SyncSEbyContraction_V2(Affin_mat, confidence_weights, d, lambda, SO_sync_func);
+        CONT_error(r) = error_calc_SE_k(estimations2, GT_data );       
+
+        % ASAP L1
+        if n<120
+            estimations3 = sync_SEk_by_ASAP_L1(triu(Affin_mat), confidence_weights, d, SO_sync_func);
+        else
+            estimations3 = sync_SEk_by_ASAP(triu(Affin_mat), confidence_weights, d, SO_sync_func);
+        end
+        ASAP_error(r)  = error_calc_SE_k(estimations3, GT_data );
     end
     errors(q,1) = mean(SPEC_error);
     errors(q,2) = mean(CONT_error);
@@ -79,10 +76,10 @@ end
 errors
 figure;
 hold on;
-plot(pValues, errors(:,3),'--k','LineWidth',2);
+plot(pValues, errors(:,3),'--k','LineWidth',3);
 plot(pValues, errors(:,1),'-.','Color','red','LineWidth',3.3);
 plot(pValues, errors(:,2),'Color','blue','LineWidth',3);
-legend('Separation-based','Spectral','Contraction');
+legend('Separation','Spectral','Contraction');
 fn = sprintf('n = %d, d = %d', n, d);
 title(fn);
 xlabel('Non-outliers rate');
