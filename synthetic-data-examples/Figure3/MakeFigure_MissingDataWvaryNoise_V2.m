@@ -1,6 +1,9 @@
 function [errors, avg_snr, avg_lambda, AvailData] = MakeFigure_MissingDataWvaryNoise_V2(n, d)
 % Ground for comparison: Full graph, ourlier, fixed noise level
-% Compared methods     : Spectral (SVD), contraction, ASAP
+% Compared methods     : Scaled spectral (SVD), 
+%                        contraction (EIG for an d + MLE for d==3), 
+%                        ASAP (EIG), 
+%                        LS (contraction warm-up)
 %
 %
 % NS, December 17
@@ -54,7 +57,7 @@ for q=1:iterations
     parms.d    = d; 
     parms.sig1 = noiseValues(q); 
     parms.sig2 = noiseValues(q); 
-    noise_func = @WrappedGaussianSE; %@naive_random_SE_d;                 
+    noise_func = @WrappedGaussianSE;               
     
     % calling the functions    
     SPEC_error = zeros(repeatedIters,1);
@@ -81,7 +84,7 @@ for q=1:iterations
         
         if d==3
             % Contraction method w MLE
-           % lambda_val(r) = 100; %LambdaEstimation(triu(A), W, d);
+           % lambda_val(r) = LambdaEstimation(triu(A), W, d);
             estimations_mle  =  SyncSEbyContraction_V2(A, W, d, lambda_val(r)/2, SO_sync_func);
             CONT_MLE_error(r) = error_calc_SE_k(estimations_mle, GT_data);
         end
