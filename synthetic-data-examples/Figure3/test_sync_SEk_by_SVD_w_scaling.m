@@ -1,4 +1,4 @@
-% "compare_scaling_in_spectral_method"
+% "test_sync_SEk_by_SVD_w_scaling" tests the scaled version of the spectral method.
 
 n = 40;
 d = 3;
