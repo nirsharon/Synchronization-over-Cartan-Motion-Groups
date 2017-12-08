@@ -1,7 +1,9 @@
 function [errors, avg_snr, AvailData, avg_lambda] = MakeFigure_MissingDataWfixedNoise_V2(n, d)
 % Ground for comparison: Full graph, ourlier, fixed noise level
-% Compared methods     : Spectral (SVD), contraction, ASAP, LS
-%
+% Compared methods     : Scaled spectral (SVD), 
+%                        contraction (EIG for an d + MLE for d==3), 
+%                        ASAP (EIG), 
+%                        LS (contraction warm-up)
 %
 % NS, December 17
 
@@ -29,12 +31,16 @@ else
     SO_sync_func =  @Sync_SOd_spectral;
 end
 
+if repeatedIters<10
+    warning(['Note. Too few iterations were set (',num2str(repeatedIters)],')');
+end
+
 % main loop
 for q=1:iterations
     parms.d    = d;
     parms.sig1 = FixedNoise;
     parms.sig2 = FixedNoise;
-    noise_func = @WrappedGaussianSE; %@naive_random_SE_d; %
+    noise_func = @WrappedGaussianSE; 
     p = AvailData(q);
     m = n*(n-1)/2;               % full graph
     non_outliers = floor(p*m);   % number of nonoutliers
@@ -58,8 +64,8 @@ for q=1:iterations
         [A, snr_level(r)] = MakeAffinityMatrix(GT_data, prob_arr, noise_func, parms, 0);
         
         % Contraction method
-        lambda_val(r) = 50; %LambdaEstimation(triu(A), W, d);
-        estimations2  =  SyncSEbyContraction_V2(A, W, d, lambda_val(r));
+        lambda_val(r) = LambdaEstimation(triu(A), W, d);
+        estimations2  = SyncSEbyContraction_V2(A, W, d, lambda_val(r));
         CONT_error(r) = error_calc_SE_k(estimations2, GT_data);
         
         % Spectral method based on SVD
@@ -72,7 +78,7 @@ for q=1:iterations
         
         if d==3
             % Contraction method w MLE
-           % lambda_val(r) = 100; %LambdaEstimation(triu(A), W, d);
+           % lambda_val(r) = LambdaEstimation(triu(A), W, d);
             estimations_mle  =  SyncSEbyContraction_V2(A, W, d, lambda_val(r)/2, SO_sync_func);
             CONT_MLE_error(r) = error_calc_SE_k(estimations_mle, GT_data);
         end
