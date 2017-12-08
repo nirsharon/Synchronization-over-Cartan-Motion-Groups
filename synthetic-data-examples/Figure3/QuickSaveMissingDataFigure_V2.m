@@ -1,4 +1,4 @@
-function [  ] = QuickSaveMissingDataFigure_V1(nameit, xrange, err1)
+function [  ] = QuickSaveMissingDataFigure_V2(nameit, xrange, err1)
 
 if nargin<3 
     err1 = [];
